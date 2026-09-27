@@ -1,0 +1,130 @@
+:root {
+  --bg: #f4f6fb;
+  --card: #ffffff;
+  --text: #1c2233;
+  --muted: #6b7385;
+  --line: #dde2ee;
+  --accent: #3b5bdb;
+  --accent-soft: #e5ebff;
+  --on-accent: #ffffff;
+  --warn-bg: #fff4d6;
+  --warn-text: #7a5600;
+  --short: #d6336c;
+  --short-soft: #ffe3ec;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12151d;
+    --card: #1c212c;
+    --text: #e8ebf3;
+    --muted: #9aa2b4;
+    --line: #2e3544;
+    --accent: #7c95ff;
+    --accent-soft: #28315a;
+    --on-accent: #10142a;
+    --warn-bg: #3a3014;
+    --warn-text: #f2d27a;
+    --short: #ff7aa2;
+    --short-soft: #45202d;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+
+.app { max-width: 640px; margin: 0 auto; padding: 0 16px 96px; }
+
+.top {
+  position: sticky; top: 0; z-index: 5;
+  background: var(--bg);
+  padding: calc(env(safe-area-inset-top) + 10px) 0 10px;
+  border-bottom: 1px solid var(--line);
+}
+h1 { font-size: 18px; margin: 0 0 8px; }
+h2 { font-size: 16px; margin: 0; }
+
+.cats, .tabs { display: flex; gap: 6px; }
+.cats button, .tabs button {
+  flex: 1; padding: 8px 4px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--card);
+  font-size: 14px; font-weight: 600; white-space: nowrap;
+}
+.cats button.on, .tabs button.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+.nums { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-top: 8px; font-size: 13px; color: var(--muted); }
+.nums label { display: flex; align-items: center; gap: 6px; }
+.stepper { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+.stepper button { width: 32px; height: 32px; border: 0; background: none; font-size: 16px; }
+.stepper input {
+  width: 44px; height: 32px; border: 0; background: none; text-align: center;
+  font-size: 15px; font-weight: 600; color: var(--text); -moz-appearance: textfield;
+}
+.stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.warn { background: var(--warn-bg); color: var(--warn-text); font-size: 12px; padding: 8px 10px; border-radius: 8px; margin: 10px 0 0; }
+
+.results { margin-top: 12px; }
+.badge { display: inline-block; min-width: 22px; padding: 0 6px; border-radius: 11px; background: rgba(0,0,0,.12); font-size: 12px; }
+.recipes { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.recipe { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.recipe-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.recipe-name { font-weight: 700; }
+.recipe-total { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.recipe-ings { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.chip { font-size: 14px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); }
+.chip.short { background: var(--short-soft); color: var(--short); }
+.cook { margin-top: 8px; width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--accent); background: none; color: var(--accent); font-weight: 600; }
+.empty-msg { color: var(--muted); text-align: center; padding: 20px 0; margin: 0; }
+
+.inventory { margin-top: 20px; }
+.inv-head { display: flex; justify-content: space-between; align-items: center; }
+.link { border: 0; background: none; color: var(--muted); font-size: 13px; text-decoration: underline; }
+.hint { font-size: 12px; color: var(--muted); margin: 4px 0 8px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 6px; }
+.tile {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 2px 6px; border-radius: 12px; border: 2px solid var(--line); background: var(--card);
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation;
+}
+.tile:active { transform: scale(.96); }
+.tile.empty { opacity: .55; }
+.tile.needed { border-color: var(--short); opacity: 1; }
+.tile-icon { font-size: 26px; line-height: 1; }
+.tile-count { font-size: 18px; font-weight: 700; }
+.tile-name { font-size: 10px; color: var(--muted); line-height: 1.2; text-align: center; }
+
+.sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: flex-end; justify-content: center; z-index: 20; }
+.sheet {
+  width: 100%; max-width: 480px; background: var(--card); border-radius: 16px 16px 0 0;
+  padding: 16px 16px calc(env(safe-area-inset-bottom) + 16px);
+}
+.pad-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.pad-icon { font-size: 30px; }
+.pad-name { flex: 1; font-weight: 700; }
+.pad-value { font-size: 30px; font-weight: 800; min-width: 60px; text-align: right; }
+.pad-steps, .pad-keys, .pad-actions { display: grid; gap: 8px; margin-bottom: 8px; }
+.pad-steps { grid-template-columns: repeat(4, 1fr); }
+.pad-keys { grid-template-columns: repeat(3, 1fr); }
+.pad-actions { grid-template-columns: 1fr 2fr; margin-bottom: 0; }
+.sheet button { padding: 14px 0; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); font-size: 18px; font-weight: 600; }
+.pad-steps button { background: var(--accent-soft); border-color: transparent; }
+.sheet .primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+.toast {
+  position: fixed; left: 16px; right: 16px; bottom: calc(env(safe-area-inset-bottom) + 16px); z-index: 10;
+  max-width: 608px; margin: 0 auto;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--text); color: var(--bg); border-radius: 12px; padding: 10px 12px; font-size: 14px;
+}
+.toast span { flex: 1; }
+.toast button { border: 0; background: none; color: var(--bg); font-weight: 700; padding: 4px 6px; }
