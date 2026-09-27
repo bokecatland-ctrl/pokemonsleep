@@ -45,14 +45,13 @@ export function matchRecipes(recipes: Recipe[], inventory: Inventory, opts: Matc
     .filter((r) => r.category === opts.category && recipeTotal(r) <= opts.potSize)
     .map((r) => evaluate(r, inventory));
 
-  // 食材の多い料理ほどエナジーが高いので、合計個数の多い順に並べる
-  const cookable = candidates
-    .filter((r) => r.missingTotal === 0)
-    .sort((a, b) => b.total - a.total);
+  const byStrength = (a: RecipeResult, b: RecipeResult) => b.recipe.baseStrength - a.recipe.baseStrength;
+
+  const cookable = candidates.filter((r) => r.missingTotal === 0).sort(byStrength);
 
   const almost = candidates
     .filter((r) => r.missingTotal > 0 && r.missingTotal <= opts.nearLimit)
-    .sort((a, b) => a.missingTotal - b.missingTotal || b.total - a.total);
+    .sort((a, b) => a.missingTotal - b.missingTotal || byStrength(a, b));
 
   return { cookable, almost };
 }

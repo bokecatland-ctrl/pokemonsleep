@@ -15,7 +15,9 @@ export function RecipeList({ results, empty, onCook }: Props) {
         <li key={r.recipe.id} className="recipe">
           <div className="recipe-head">
             <span className="recipe-name">{r.recipe.name}</span>
-            <span className="recipe-total">食材 {r.total}個</span>
+            <span className="recipe-total">
+              食材{r.total}個・{r.recipe.baseStrength.toLocaleString()}
+            </span>
           </div>
           <div className="recipe-ings">
             {(Object.entries(r.recipe.ingredients) as [IngredientId, number][]).map(([id, need]) => {

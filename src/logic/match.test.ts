@@ -2,31 +2,33 @@ import { consume, matchRecipes } from './match';
 import { INGREDIENT_BY_ID } from '../data/ingredients';
 import { RECIPES, type Recipe } from '../data/recipes';
 
-const curry = (id: string, ingredients: Recipe['ingredients']): Recipe => ({
+const curry = (id: number, name: string, baseStrength: number, ingredients: Recipe['ingredients']): Recipe => ({
   id,
-  name: id,
+  name,
   category: 'curry',
+  baseStrength,
   ingredients,
 });
 
 const recipes: Recipe[] = [
-  curry('small', { apple: 7 }),
-  curry('big', { milk: 8, sausage: 8 }),
-  { id: 'salad', name: 'salad', category: 'salad', ingredients: { apple: 1 } },
+  curry(1, 'small', 700, { apple: 7 }),
+  curry(2, 'big', 1900, { milk: 8, sausage: 8 }),
+  { id: 3, name: 'salad', category: 'salad', baseStrength: 100, ingredients: { apple: 1 } },
 ];
+
 
 const opts = { category: 'curry' as const, potSize: 30, nearLimit: 10 };
 
 describe('matchRecipes', () => {
   it('ちょうど足りる料理は作れる', () => {
     const { cookable } = matchRecipes(recipes, { apple: 7 }, opts);
-    expect(cookable.map((r) => r.recipe.id)).toEqual(['small']);
+    expect(cookable.map((r) => r.recipe.name)).toEqual(['small']);
   });
 
-  it('1個足りない料理は「あと少し」に不足数付きで出る（同数なら食材の多い順）', () => {
+  it('1個足りない料理は「あと少し」に不足数付きで出る（同数ならエナジーの高い順）', () => {
     const { cookable, almost } = matchRecipes(recipes, { apple: 6, milk: 8, sausage: 7 }, opts);
     expect(cookable).toEqual([]);
-    expect(almost.map((r) => [r.recipe.id, r.shortages])).toEqual([
+    expect(almost.map((r) => [r.recipe.name, r.shortages])).toEqual([
       ['big', [{ id: 'sausage', missing: 1 }]],
       ['small', [{ id: 'apple', missing: 1 }]],
     ]);
@@ -34,22 +36,22 @@ describe('matchRecipes', () => {
 
   it('鍋の容量を超える料理は出さない', () => {
     const { cookable } = matchRecipes(recipes, { apple: 99, milk: 99, sausage: 99 }, { ...opts, potSize: 15 });
-    expect(cookable.map((r) => r.recipe.id)).toEqual(['small']);
+    expect(cookable.map((r) => r.recipe.name)).toEqual(['small']);
   });
 
   it('カテゴリ違いは出さない', () => {
     const { cookable } = matchRecipes(recipes, { apple: 99 }, { ...opts, category: 'salad' });
-    expect(cookable.map((r) => r.recipe.id)).toEqual(['salad']);
+    expect(cookable.map((r) => r.recipe.name)).toEqual(['salad']);
   });
 
   it('不足が上限を超える料理は「あと少し」に出さない', () => {
     const { almost } = matchRecipes(recipes, {}, { ...opts, nearLimit: 10 });
-    expect(almost.map((r) => r.recipe.id)).toEqual(['small']);
+    expect(almost.map((r) => r.recipe.name)).toEqual(['small']);
   });
 
-  it('作れる料理は食材の多い順', () => {
+  it('作れる料理はエナジーの高い順', () => {
     const { cookable } = matchRecipes(recipes, { apple: 7, milk: 8, sausage: 8 }, opts);
-    expect(cookable.map((r) => r.recipe.id)).toEqual(['big', 'small']);
+    expect(cookable.map((r) => r.recipe.name)).toEqual(['big', 'small']);
   });
 });
 
@@ -71,5 +73,11 @@ describe('レシピデータ', () => {
 
   it('IDが重複していない', () => {
     expect(new Set(RECIPES.map((r) => r.id)).size).toBe(RECIPES.length);
+  });
+
+  it('全カテゴリに料理がある', () => {
+    for (const c of ['curry', 'salad', 'dessert'] as const) {
+      expect(RECIPES.filter((r) => r.category === c).length).toBeGreaterThan(0);
+    }
   });
 });
