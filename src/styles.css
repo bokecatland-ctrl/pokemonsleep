@@ -68,7 +68,6 @@ h2 { font-size: 16px; margin: 0; }
   width: 44px; height: 32px; border: 0; background: none; text-align: center;
   font-size: 15px; font-weight: 600; color: var(--text); -moz-appearance: textfield;
 }
-.stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
 
 .warn { background: var(--warn-bg); color: var(--warn-text); font-size: 12px; padding: 8px 10px; border-radius: 8px; margin: 10px 0 0; }
 
@@ -82,7 +81,6 @@ h2 { font-size: 16px; margin: 0; }
 .recipe-ings { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .chip { font-size: 14px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); }
 .chip.short { background: var(--short-soft); color: var(--short); }
-.cook { margin-top: 8px; width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--accent); background: none; color: var(--accent); font-weight: 600; }
 .empty-msg { color: var(--muted); text-align: center; padding: 20px 0; margin: 0; }
 
 .inventory { margin-top: 20px; }
@@ -148,3 +146,17 @@ h2 { font-size: 16px; margin: 0; }
 .review-name { flex: 1; text-align: left; }
 .review-before { color: var(--muted); font-size: 13px; }
 .review-value { min-width: 36px; text-align: right; font-weight: 700; font-size: 17px; }
+
+.recipe.too-big { opacity: .5; }
+.recipe-note { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+.tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; vertical-align: 2px; }
+.tag.ok { background: var(--accent); color: var(--on-accent); }
+
+.filter { margin-top: 10px; }
+.filter-head { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); }
+.filter-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.filter-chips button {
+  width: 42px; height: 42px; border-radius: 10px; border: 2px solid var(--line); background: var(--card);
+  font-size: 22px; line-height: 1; padding: 0;
+}
+.filter-chips button.on { border-color: var(--accent); background: var(--accent-soft); }

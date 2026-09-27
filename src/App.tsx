@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { IngredientId } from './data/ingredients';
 import { CATEGORY_LABEL, DATA_VERIFIED, RECIPES, type Category } from './data/recipes';
-import { consume, matchRecipes, type Inventory, type RecipeResult } from './logic/match';
+import { listAll, matchRecipes, type Inventory } from './logic/match';
 import { load, save } from './logic/storage';
+import { IngredientFilter } from './components/IngredientFilter';
 import { IngredientGrid } from './components/IngredientGrid';
 import { NumberPad } from './components/NumberPad';
 import { RecipeList } from './components/RecipeList';
@@ -22,7 +23,8 @@ const SETTINGS_KEY = 'pks-cooking:settings';
 export default function App() {
   const [inventory, setInventory] = useState<Inventory>(() => load(INVENTORY_KEY, {}));
   const [settings, setSettings] = useState<Settings>(() => load(SETTINGS_KEY, DEFAULT_SETTINGS));
-  const [tab, setTab] = useState<'cookable' | 'almost'>('cookable');
+  const [tab, setTab] = useState<'cookable' | 'almost' | 'all'>('cookable');
+  const [uses, setUses] = useState<IngredientId[]>([]);
   const [padFor, setPadFor] = useState<IngredientId | null>(null);
   const [undo, setUndo] = useState<{ message: string; before: Inventory } | null>(null);
   const [scan, setScan] = useState<{ progress: string } | { result: ScanResult } | { error: string } | null>(null);
@@ -36,6 +38,22 @@ export default function App() {
     [inventory, settings],
   );
 
+  const all = useMemo(
+    () => listAll(RECIPES, inventory, { category: settings.category, potSize: settings.potSize, uses }),
+    [inventory, settings.category, settings.potSize, uses],
+  );
+
+  // 絞り込みの候補は、今のカテゴリの料理で使う食材だけ
+  const categoryIngredients = useMemo(
+    () =>
+      new Set(
+        RECIPES.filter((r) => r.category === settings.category).flatMap(
+          (r) => Object.keys(r.ingredients) as IngredientId[],
+        ),
+      ),
+    [settings.category],
+  );
+
   // 「あと少し」で足りない食材はタイルを強調する
   const needed = useMemo(
     () => new Set(tab === 'almost' ? almost.flatMap((r) => r.shortages.map((s) => s.id)) : []),
@@ -44,11 +62,6 @@ export default function App() {
 
   const setCount = (id: IngredientId, n: number) =>
     setInventory((inv) => ({ ...inv, [id]: Math.max(0, Math.min(999, n)) }));
-
-  const cook = (r: RecipeResult) => {
-    setUndo({ message: `${r.recipe.name}の食材を引きました`, before: inventory });
-    setInventory(consume(inventory, r.recipe));
-  };
 
   const readScreenshots = async (files: File[]) => {
     if (files.length === 0) return;
@@ -81,7 +94,10 @@ export default function App() {
               role="tab"
               aria-selected={settings.category === c}
               className={settings.category === c ? 'on' : ''}
-              onClick={() => update({ category: c })}
+              onClick={() => {
+                update({ category: c });
+                setUses([]);
+              }}
             >
               {CATEGORY_LABEL[c]}
             </button>
@@ -114,11 +130,17 @@ export default function App() {
           <button type="button" role="tab" aria-selected={tab === 'almost'} className={tab === 'almost' ? 'on' : ''} onClick={() => setTab('almost')}>
             あと少し <span className="badge">{almost.length}</span>
           </button>
+          <button type="button" role="tab" aria-selected={tab === 'all'} className={tab === 'all' ? 'on' : ''} onClick={() => setTab('all')}>
+            全レシピ
+          </button>
         </div>
-        {tab === 'cookable' ? (
-          <RecipeList results={cookable} empty="今の食材で作れる料理はありません" onCook={cook} />
-        ) : (
-          <RecipeList results={almost} empty="あと少しで作れる料理はありません" />
+        {tab === 'cookable' && <RecipeList results={cookable} empty="今の食材で作れる料理はありません" />}
+        {tab === 'almost' && <RecipeList results={almost} empty="あと少しで作れる料理はありません" />}
+        {tab === 'all' && (
+          <>
+            <IngredientFilter available={categoryIngredients} selected={uses} onChange={setUses} />
+            <RecipeList results={all} empty="選んだ食材をすべて使う料理はありません" showStatus />
+          </>
         )}
       </section>
 
@@ -231,16 +253,31 @@ export default function App() {
 
 function Stepper({ value, min, max, onChange }: { value: number; min: number; max: number; onChange: (v: number) => void }) {
   const clamp = (v: number) => Math.max(min, Math.min(max, v));
+  // 入力中は空欄も許すため、文字列で持つ。範囲内の数字になったらその都度反映する
+  const [draft, setDraft] = useState(String(value));
+  useEffect(() => setDraft(String(value)), [value]);
+
   return (
     <span className="stepper">
       <button type="button" aria-label="減らす" onClick={() => onChange(clamp(value - 1))}>−</button>
       <input
-        type="number"
+        type="text"
         inputMode="numeric"
-        value={value}
-        min={min}
-        max={max}
-        onChange={(e) => onChange(clamp(Number(e.target.value) || min))}
+        pattern="[0-9]*"
+        value={draft}
+        onFocus={(e) => e.target.select()}
+        onChange={(e) => {
+          const text = e.target.value.replace(/[^0-9]/g, '').slice(0, String(max).length);
+          setDraft(text);
+          const n = Number(text);
+          if (text !== '' && n >= min && n <= max) onChange(n);
+        }}
+        onBlur={() => {
+          // 空欄や範囲外のまま離れたら、範囲内の値に戻す
+          const n = draft === '' ? value : clamp(Number(draft));
+          setDraft(String(n));
+          if (n !== value) onChange(n);
+        }}
       />
       <button type="button" aria-label="増やす" onClick={() => onChange(clamp(value + 1))}>＋</button>
     </span>

@@ -40,12 +40,12 @@ export function evaluate(recipe: Recipe, inventory: Inventory): RecipeResult {
   };
 }
 
+const byStrength = (a: RecipeResult, b: RecipeResult) => b.recipe.baseStrength - a.recipe.baseStrength;
+
 export function matchRecipes(recipes: Recipe[], inventory: Inventory, opts: MatchOptions) {
   const candidates = recipes
     .filter((r) => r.category === opts.category && recipeTotal(r) <= opts.potSize)
     .map((r) => evaluate(r, inventory));
-
-  const byStrength = (a: RecipeResult, b: RecipeResult) => b.recipe.baseStrength - a.recipe.baseStrength;
 
   const cookable = candidates.filter((r) => r.missingTotal === 0).sort(byStrength);
 
@@ -56,10 +56,24 @@ export function matchRecipes(recipes: Recipe[], inventory: Inventory, opts: Matc
   return { cookable, almost };
 }
 
-export function consume(inventory: Inventory, recipe: Recipe): Inventory {
-  const next = { ...inventory };
-  for (const [id, need] of Object.entries(recipe.ingredients) as [IngredientId, number][]) {
-    next[id] = Math.max(0, (next[id] ?? 0) - need);
-  }
-  return next;
+export interface ListedRecipe extends RecipeResult {
+  fitsPot: boolean;
+}
+
+export interface ListOptions {
+  category: Category;
+  potSize: number;
+  // ここで選んだ食材をすべて使う料理だけにする（空なら全部）
+  uses: IngredientId[];
+}
+
+// 全レシピ一覧。鍋に入らない料理も含め、エナジーの高い順に並べる。
+export function listAll(recipes: Recipe[], inventory: Inventory, opts: ListOptions): ListedRecipe[] {
+  return recipes
+    .filter((r) => r.category === opts.category && opts.uses.every((id) => (r.ingredients[id] ?? 0) > 0))
+    .map((r) => {
+      const result = evaluate(r, inventory);
+      return { ...result, fitsPot: result.total <= opts.potSize };
+    })
+    .sort(byStrength);
 }

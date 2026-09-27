@@ -1,4 +1,4 @@
-import { consume, matchRecipes } from './match';
+import { listAll, matchRecipes } from './match';
 import { INGREDIENT_BY_ID } from '../data/ingredients';
 import { RECIPES, type Recipe } from '../data/recipes';
 
@@ -55,9 +55,34 @@ describe('matchRecipes', () => {
   });
 });
 
-describe('consume', () => {
-  it('使った食材を在庫から引く', () => {
-    expect(consume({ apple: 10, milk: 1 }, recipes[0])).toEqual({ apple: 3, milk: 1 });
+describe('listAll', () => {
+  const all = (uses: Parameters<typeof listAll>[2]['uses'] = [], potSize = 15) =>
+    listAll(recipes, { apple: 7 }, { category: 'curry', potSize, uses });
+
+  it('カテゴリの全料理をエナジー順に出す', () => {
+    expect(all().map((r) => r.recipe.name)).toEqual(['big', 'small']);
+  });
+
+  it('鍋に入らない料理も fitsPot=false で出す', () => {
+    expect(all().map((r) => [r.recipe.name, r.fitsPot])).toEqual([
+      ['big', false],
+      ['small', true],
+    ]);
+  });
+
+  it('足りない食材を出す', () => {
+    const big = all().find((r) => r.recipe.name === 'big')!;
+    expect(big.shortages).toEqual([
+      { id: 'milk', missing: 8 },
+      { id: 'sausage', missing: 8 },
+    ]);
+    expect(all().find((r) => r.recipe.name === 'small')!.missingTotal).toBe(0);
+  });
+
+  it('食材で絞り込む（複数選ぶと全部を使う料理だけ）', () => {
+    expect(all(['milk']).map((r) => r.recipe.name)).toEqual(['big']);
+    expect(all(['milk', 'sausage']).map((r) => r.recipe.name)).toEqual(['big']);
+    expect(all(['milk', 'apple'])).toEqual([]);
   });
 });
 
